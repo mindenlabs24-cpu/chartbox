@@ -36,29 +36,29 @@ export default function LoginPage() {
   };
 
   return (
-    <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
-      <div className="glass-panel animate-fade-in" style={{ padding: '3rem', width: '100%', maxWidth: '450px' }}>
-        <h2 className="title-gradient" style={{ fontSize: '2.5rem', marginBottom: '0.5rem', textAlign: 'center' }}>
+    <main className="min-h-screen flex items-center justify-center p-4 md:p-8">
+      <div className="glass-panel animate-fade-in p-8 md:p-12 w-full max-w-md">
+        <h2 className="title-gradient text-3xl md:text-4xl mb-2 text-center font-bold">
           Karibu Tena
         </h2>
-        <p style={{ color: 'var(--text-secondary)', textAlign: 'center', marginBottom: '2rem' }}>
+        <p className="text-gray-400 text-center mb-8 text-sm md:text-base">
           Ingia kwenye akaunti yako ya CHART BOX
         </p>
 
         {error && (
-          <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#fca5a5', padding: '10px 15px', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg mb-6 text-sm">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+            <label className="block mb-2 text-sm text-gray-400">
               Jina la Mtumiaji (Username)
             </label>
             <input
               type="text"
-              className="input-field"
+              className="input-field w-full"
               value={formData.username}
               onChange={(e) => setFormData({ ...formData, username: e.target.value })}
               required
@@ -66,25 +66,25 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+            <label className="block mb-2 text-sm text-gray-400">
               Nenosiri (Password)
             </label>
             <input
               type="password"
-              className="input-field"
+              className="input-field w-full"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               required
             />
           </div>
 
-          <button type="submit" className="btn-primary" disabled={loading} style={{ marginTop: '1rem', width: '100%' }}>
+          <button type="submit" className="btn-primary mt-4 w-full" disabled={loading}>
             {loading ? 'Inaingia...' : 'Ingia (Login)'}
           </button>
         </form>
 
-        <div style={{ marginTop: '2rem', textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-          Huna akaunti? <Link href="/register" style={{ color: 'var(--primary-color)', fontWeight: 500 }}>Jisajili hapa</Link>
+        <div className="mt-8 text-center text-sm text-gray-400">
+          Huna akaunti? <Link href="/register" className="text-blue-500 font-medium hover:underline">Jisajili hapa</Link>
         </div>
       </div>
     </main>

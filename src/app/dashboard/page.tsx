@@ -42,76 +42,75 @@ export default function DashboardPage() {
   };
 
   if (status === "loading") {
-    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>Inapakia...</div>;
+    return <div className="flex justify-center items-center min-h-screen text-gray-400">Inapakia...</div>;
   }
 
   return (
-    <main style={{ 
-      minHeight: '100vh', 
-      padding: '2rem',
-      backgroundImage: wallpaper ? `url(${wallpaper})` : 'none',
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-    }}>
-      <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+    <main 
+      className="min-h-screen p-4 md:p-8"
+      style={{ 
+        backgroundImage: wallpaper ? `url(${wallpaper})` : 'none',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-6 md:gap-8">
         
         {/* Sidebar */}
-        <div className="glass-panel" style={{ padding: '2rem', flex: '1', minWidth: '300px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <div style={{ 
-              width: '120px', 
-              height: '120px', 
-              borderRadius: '50%', 
-              background: profilePicture ? `url(${profilePicture}) center/cover` : 'var(--primary-color)',
-              margin: '0 auto 1rem auto',
-              border: '4px solid var(--glass-border)'
-            }} />
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 600 }}>{session?.user?.name}</h2>
-            <p style={{ color: 'var(--text-secondary)' }}>Online</p>
+        <div className="glass-panel p-6 md:p-8 flex-1 md:max-w-xs w-full">
+          <div className="text-center mb-8">
+            <div 
+              className="w-24 h-24 md:w-32 md:h-32 rounded-full mx-auto mb-4 border-4 border-[rgba(255,255,255,0.08)] bg-[#3b82f6]"
+              style={{ 
+                background: profilePicture ? `url(${profilePicture}) center/cover` : 'var(--primary-color)',
+              }} 
+            />
+            <h2 className="text-2xl font-semibold">{session?.user?.name}</h2>
+            <p className="text-gray-400 mt-1">Online</p>
           </div>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <button className="btn-secondary" onClick={() => router.push('/chat')}>
+          <div className="flex flex-col gap-4">
+            <button className="btn-secondary w-full" onClick={() => router.push('/chat')}>
               Nenda Kwenye Chat
             </button>
-            <button className="btn-secondary" style={{ color: '#ef4444', borderColor: 'rgba(239,68,68,0.3)' }} onClick={() => signOut()}>
+            <button className="btn-secondary w-full text-red-400 border-red-500/30 hover:bg-red-500/10" onClick={() => signOut()}>
               Ondoka (Logout)
             </button>
           </div>
         </div>
 
         {/* Settings Panel */}
-        <div className="glass-panel" style={{ padding: '3rem', flex: '2', minWidth: '400px' }}>
-          <h2 className="title-gradient" style={{ fontSize: '2rem', marginBottom: '2rem' }}>
-            Mipangilio ya Wasifu (Profile Settings)
+        <div className="glass-panel p-6 md:p-12 flex-[2] w-full">
+          <h2 className="title-gradient text-3xl md:text-4xl font-bold mb-6 md:mb-8">
+            Mipangilio ya Wasifu
           </h2>
 
           {statusMessage && (
-            <div style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid var(--primary-color)', color: 'var(--text-primary)', padding: '10px 15px', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+            <div className="bg-blue-500/10 border border-blue-500 text-blue-100 px-4 py-3 rounded-lg mb-6 text-sm">
               {statusMessage}
             </div>
           )}
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div className="flex flex-col gap-6">
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+              <label className="block mb-2 text-sm text-gray-400">
                 Badilisha Jina (Username)
               </label>
               <input
                 type="text"
-                className="input-field"
+                className="input-field w-full"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+              <label className="block mb-2 text-sm text-gray-400">
                 Picha ya Wasifu (Profile Picture URL)
               </label>
               <input
                 type="text"
-                className="input-field"
+                className="input-field w-full"
                 placeholder="Weka link ya picha..."
                 value={profilePicture}
                 onChange={(e) => setProfilePicture(e.target.value)}
@@ -119,20 +118,20 @@ export default function DashboardPage() {
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+              <label className="block mb-2 text-sm text-gray-400">
                 Picha ya Nyuma (Background Wallpaper URL)
               </label>
               <input
                 type="text"
-                className="input-field"
+                className="input-field w-full"
                 placeholder="Weka link ya background..."
                 value={wallpaper}
                 onChange={(e) => setWallpaper(e.target.value)}
               />
             </div>
 
-            <button className="btn-primary" onClick={handleSave} style={{ marginTop: '1rem', width: 'fit-content' }}>
-              Hifadhi Mabadiliko (Save)
+            <button className="btn-primary mt-4 w-full md:w-auto" onClick={handleSave}>
+              Hifadhi Mabadiliko
             </button>
           </div>
         </div>
