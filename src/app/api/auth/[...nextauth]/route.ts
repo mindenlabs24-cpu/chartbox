@@ -1,7 +1,5 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -16,24 +14,31 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Missing credentials");
         }
 
-        const user = await prisma.user.findUnique({
-          where: { username: credentials.username }
+        const res = await fetch("http://localhost:5000/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: credentials.username,
+            password: credentials.password,
+          }),
         });
 
-        if (!user || !user.password) {
-          throw new Error("Invalid credentials");
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || "Invalid credentials");
         }
 
-        const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
-
-        if (!isPasswordValid) {
-          throw new Error("Invalid credentials");
+        if (data.user) {
+          return {
+            id: data.user.id,
+            name: data.user.username,
+            image: data.user.profilePicture,
+            backendToken: data.token // Optional: we can store backend token if needed
+          };
         }
 
-        return {
-          id: user.id,
-          name: user.username,
-        };
+        return null;
       }
     })
   ],
@@ -44,10 +49,17 @@ export const authOptions: NextAuthOptions = {
     signIn: "/login",
   },
   callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.backendToken = (user as any).backendToken;
+      }
+      return token;
+    },
     async session({ session, token }) {
       if (token && session.user) {
         session.user.name = token.name;
         (session.user as any).id = token.sub;
+        (session.user as any).backendToken = token.backendToken;
       }
       return session;
     }

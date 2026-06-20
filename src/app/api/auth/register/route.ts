@@ -1,41 +1,24 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
   try {
     const { username, phoneNumber, password } = await req.json();
 
-    if (!username || !phoneNumber || !password) {
-      return NextResponse.json({ message: "All fields are required" }, { status: 400 });
-    }
-
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { username },
-          { phoneNumber }
-        ]
-      }
+    const response = await fetch("http://localhost:5000/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, phoneNumber, password }),
     });
 
-    if (existingUser) {
-      return NextResponse.json({ message: "User with this username or phone number already exists" }, { status: 400 });
+    const data = await response.json();
+
+    if (!response.ok) {
+      return NextResponse.json({ message: data.message || "Registration failed" }, { status: response.status });
     }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newUser = await prisma.user.create({
-      data: {
-        username,
-        phoneNumber,
-        password: hashedPassword,
-      }
-    });
 
     return NextResponse.json({ message: "User registered successfully" }, { status: 201 });
   } catch (error) {
-    console.error("Registration error:", error);
+    console.error("Registration proxy error:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 }
