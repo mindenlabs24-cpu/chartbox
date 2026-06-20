@@ -35,22 +35,47 @@ io.on('connection', (socket) => {
 
   socket.on('sendMessage', async (data) => {
     const { senderId, receiverId, content } = data;
-    
-    // Save to DB
     try {
       const newMessage = new Message({ senderId, receiverId, content });
       const savedMessage = await newMessage.save();
 
-      // Emit to receiver if online
       const receiverSocketId = onlineUsers.get(receiverId);
       if (receiverSocketId) {
         io.to(receiverSocketId).emit('receiveMessage', savedMessage);
       }
 
-      // Emit back to sender
       socket.emit('messageSent', savedMessage);
     } catch (err) {
       console.error('Error saving message:', err);
+    }
+  });
+
+  // WebRTC Signaling
+  socket.on('callUser', ({ userToCall, signalData, from, name }) => {
+    const receiverSocketId = onlineUsers.get(userToCall);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit('callUser', { signal: signalData, from, name });
+    }
+  });
+
+  socket.on('answerCall', (data) => {
+    const callerSocketId = onlineUsers.get(data.to);
+    if (callerSocketId) {
+      io.to(callerSocketId).emit('callAccepted', data.signal);
+    }
+  });
+
+  socket.on('iceCandidate', (data) => {
+    const targetSocketId = onlineUsers.get(data.to);
+    if (targetSocketId) {
+      io.to(targetSocketId).emit('iceCandidate', { candidate: data.candidate, from: data.from });
+    }
+  });
+
+  socket.on('endCall', (data) => {
+    const targetSocketId = onlineUsers.get(data.to);
+    if (targetSocketId) {
+      io.to(targetSocketId).emit('callEnded');
     }
   });
 

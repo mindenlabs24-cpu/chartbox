@@ -15,8 +15,29 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<any[]>([]);
   const [messageText, setMessageText] = useState("");
   
+  // Call States
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [receivingCall, setReceivingCall] = useState(false);
+  const [caller, setCaller] = useState("");
+  const [callerName, setCallerName] = useState("");
+  const [callerSignal, setCallerSignal] = useState<any>(null);
+  const [callAccepted, setCallAccepted] = useState(false);
+  const [callEnded, setCallEnded] = useState(false);
+  const [isVideoCall, setIsVideoCall] = useState(false);
+
   const socketRef = useRef<Socket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const myVideo = useRef<HTMLVideoElement>(null);
+  const userVideo = useRef<HTMLVideoElement>(null);
+  const connectionRef = useRef<RTCPeerConnection | null>(null);
+
+  const configuration = {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' }
+    ]
+  };
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -56,7 +77,6 @@ export default function ChatPage() {
     if (session?.user && (session.user as any).id) {
       fetchUsers();
       
-      // Initialize Socket
       socketRef.current = io("http://localhost:5000");
       socketRef.current.emit("registerUser", (session.user as any).id);
 
@@ -66,6 +86,36 @@ export default function ChatPage() {
 
       socketRef.current.on("messageSent", (msg) => {
         setMessages((prev) => [...prev, msg]);
+      });
+
+      // WebRTC Listeners
+      socketRef.current.on("callUser", (data) => {
+        setReceivingCall(true);
+        setCaller(data.from);
+        setCallerName(data.name);
+        setCallerSignal(data.signal);
+        setIsVideoCall(data.signal.type === 'offer' && data.signal.sdp.includes('m=video'));
+      });
+
+      socketRef.current.on("callAccepted", async (signal) => {
+        setCallAccepted(true);
+        if (connectionRef.current) {
+          await connectionRef.current.setRemoteDescription(new RTCSessionDescription(signal));
+        }
+      });
+
+      socketRef.current.on("iceCandidate", async (data) => {
+        if (connectionRef.current) {
+          try {
+            await connectionRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
+          } catch (e) {
+            console.error('Error adding received ice candidate', e);
+          }
+        }
+      });
+
+      socketRef.current.on("callEnded", () => {
+        endCallLocally();
       });
 
       return () => {
@@ -95,10 +145,150 @@ export default function ChatPage() {
     setMessageText("");
   };
 
+  // WebRTC Functions
+  const setupMediaStream = async (video: boolean) => {
+    try {
+      const currentStream = await navigator.mediaDevices.getUserMedia({ video, audio: true });
+      setStream(currentStream);
+      if (myVideo.current) {
+        myVideo.current.srcObject = currentStream;
+      }
+      return currentStream;
+    } catch (err) {
+      console.error("Failed to get media", err);
+      return null;
+    }
+  };
+
+  const callUser = async (idToCall: string, video: boolean) => {
+    const currentStream = await setupMediaStream(video);
+    if (!currentStream) return;
+    
+    setIsVideoCall(video);
+    
+    const peerConnection = new RTCPeerConnection(configuration);
+    connectionRef.current = peerConnection;
+
+    currentStream.getTracks().forEach(track => {
+      peerConnection.addTrack(track, currentStream);
+    });
+
+    peerConnection.ontrack = (event) => {
+      if (userVideo.current) {
+        userVideo.current.srcObject = event.streams[0];
+      }
+    };
+
+    peerConnection.onicecandidate = (event) => {
+      if (event.candidate) {
+        socketRef.current?.emit("iceCandidate", {
+          to: idToCall,
+          candidate: event.candidate,
+          from: (session?.user as any).id
+        });
+      }
+    };
+
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+
+    socketRef.current?.emit("callUser", {
+      userToCall: idToCall,
+      signalData: offer,
+      from: (session?.user as any).id,
+      name: session?.user?.name
+    });
+  };
+
+  const answerCall = async () => {
+    setCallAccepted(true);
+    const currentStream = await setupMediaStream(isVideoCall);
+    
+    const peerConnection = new RTCPeerConnection(configuration);
+    connectionRef.current = peerConnection;
+
+    if (currentStream) {
+      currentStream.getTracks().forEach(track => {
+        peerConnection.addTrack(track, currentStream);
+      });
+    }
+
+    peerConnection.ontrack = (event) => {
+      if (userVideo.current) {
+        userVideo.current.srcObject = event.streams[0];
+      }
+    };
+
+    peerConnection.onicecandidate = (event) => {
+      if (event.candidate) {
+        socketRef.current?.emit("iceCandidate", {
+          to: caller,
+          candidate: event.candidate,
+          from: (session?.user as any).id
+        });
+      }
+    };
+
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(callerSignal));
+    const answer = await peerConnection.createAnswer();
+    await peerConnection.setLocalDescription(answer);
+
+    socketRef.current?.emit("answerCall", { signal: answer, to: caller });
+  };
+
+  const endCallLocally = () => {
+    setCallEnded(true);
+    if (connectionRef.current) {
+      connectionRef.current.close();
+      connectionRef.current = null;
+    }
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    setCallAccepted(false);
+    setReceivingCall(false);
+    setCaller("");
+    setCallerSignal(null);
+    window.location.reload(); // Refresh to clear state properly
+  };
+
+  const endCall = () => {
+    socketRef.current?.emit("endCall", { to: caller || selectedUser?._id });
+    endCallLocally();
+  };
+
   if (status === "loading" || !session) return <div style={{ color: 'white', padding: '2rem' }}>Inapakia...</div>;
 
   return (
-    <main style={{ minHeight: '100vh', display: 'flex', background: 'var(--bg-color)', padding: '2rem', gap: '2rem' }}>
+    <main style={{ minHeight: '100vh', display: 'flex', background: 'var(--bg-color)', padding: '2rem', gap: '2rem', position: 'relative' }}>
+      
+      {/* Call Notification Overlay */}
+      {receivingCall && !callAccepted && (
+        <div style={{ position: 'absolute', top: 20, right: 20, background: 'var(--glass-bg)', padding: '20px', borderRadius: '15px', zIndex: 1000, border: '1px solid var(--primary-color)', boxShadow: '0 0 20px rgba(0,0,0,0.5)' }}>
+          <h3 style={{ color: 'white' }}>{callerName} anapiga simu...</h3>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+            <button className="btn-primary" onClick={answerCall}>Pokea</button>
+            <button className="btn-secondary" style={{ color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }} onClick={endCallLocally}>Kataa</button>
+          </div>
+        </div>
+      )}
+
+      {/* Video/Audio Call Overlay */}
+      {(stream || callAccepted) && (
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.9)', zIndex: 999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: '2rem', marginBottom: '2rem' }}>
+            {stream && (
+              <video playsInline muted ref={myVideo} autoPlay style={{ width: '300px', borderRadius: '15px', border: '2px solid var(--primary-color)' }} />
+            )}
+            {callAccepted && !callEnded && (
+              <video playsInline ref={userVideo} autoPlay style={{ width: '600px', borderRadius: '15px', border: '2px solid var(--secondary-color)' }} />
+            )}
+          </div>
+          <button className="btn-secondary" style={{ background: '#ef4444', color: 'white', border: 'none', padding: '15px 40px', fontSize: '1.2rem', borderRadius: '30px' }} onClick={endCall}>Kata Simu</button>
+        </div>
+      )}
+
       {/* Sidebar: Users List */}
       <div className="glass-panel" style={{ width: '300px', display: 'flex', flexDirection: 'column', padding: '1.5rem', overflowY: 'auto' }}>
         <h2 className="title-gradient" style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>Marafiki (Contacts)</h2>
@@ -142,8 +332,8 @@ export default function ChatPage() {
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{selectedUser.phoneNumber}</p>
               </div>
               <div style={{ marginLeft: 'auto', display: 'flex', gap: '1rem' }}>
-                <button className="btn-secondary" style={{ padding: '8px 16px', fontSize: '0.9rem', color: '#60a5fa', borderColor: 'rgba(96,165,250,0.3)' }}>📞 Piga Sauti</button>
-                <button className="btn-secondary" style={{ padding: '8px 16px', fontSize: '0.9rem', color: '#f472b6', borderColor: 'rgba(244,114,182,0.3)' }}>📹 Video</button>
+                <button className="btn-secondary" onClick={() => callUser(selectedUser._id, false)} style={{ padding: '8px 16px', fontSize: '0.9rem', color: '#60a5fa', borderColor: 'rgba(96,165,250,0.3)' }}>📞 Piga Sauti</button>
+                <button className="btn-secondary" onClick={() => callUser(selectedUser._id, true)} style={{ padding: '8px 16px', fontSize: '0.9rem', color: '#f472b6', borderColor: 'rgba(244,114,182,0.3)' }}>📹 Video</button>
               </div>
             </div>
 
