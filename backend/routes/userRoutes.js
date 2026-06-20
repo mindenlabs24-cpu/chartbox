@@ -32,4 +32,33 @@ router.post('/settings', authenticate, async (req, res) => {
   }
 });
 
+router.get('/all', authenticate, async (req, res) => {
+  try {
+    const users = await User.find({ _id: { $ne: req.userId } }).select('-password');
+    res.status(200).json(users);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+const Message = require('../models/Message');
+
+router.get('/messages/:contactId', authenticate, async (req, res) => {
+  try {
+    const { contactId } = req.params;
+    const messages = await Message.find({
+      $or: [
+        { senderId: req.userId, receiverId: contactId },
+        { senderId: contactId, receiverId: req.userId }
+      ]
+    }).sort({ createdAt: 1 });
+
+    res.status(200).json(messages);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 module.exports = router;

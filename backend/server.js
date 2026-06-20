@@ -22,11 +22,45 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 
 // Socket.io Setup
+const Message = require('./models/Message');
+const onlineUsers = new Map(); // userId -> socketId
+
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
 
+  socket.on('registerUser', (userId) => {
+    onlineUsers.set(userId, socket.id);
+    console.log(`User ${userId} registered with socket ${socket.id}`);
+  });
+
+  socket.on('sendMessage', async (data) => {
+    const { senderId, receiverId, content } = data;
+    
+    // Save to DB
+    try {
+      const newMessage = new Message({ senderId, receiverId, content });
+      const savedMessage = await newMessage.save();
+
+      // Emit to receiver if online
+      const receiverSocketId = onlineUsers.get(receiverId);
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit('receiveMessage', savedMessage);
+      }
+
+      // Emit back to sender
+      socket.emit('messageSent', savedMessage);
+    } catch (err) {
+      console.error('Error saving message:', err);
+    }
+  });
+
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
+    onlineUsers.forEach((value, key) => {
+      if (value === socket.id) {
+        onlineUsers.delete(key);
+      }
+    });
   });
 });
 
