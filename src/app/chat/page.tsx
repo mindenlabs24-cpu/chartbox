@@ -32,6 +32,9 @@ export default function ChatPage() {
   
   // Responsive UI state
   const [showChatArea, setShowChatArea] = useState(false);
+  
+  // Dropdown state
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const socketRef = useRef<Socket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -400,7 +403,27 @@ export default function ChatPage() {
                 <Video className="w-5 h-5 cursor-pointer hover:text-gray-700" onClick={() => callUser(selectedUser._id, true)} />
                 <Phone className="w-5 h-5 cursor-pointer hover:text-gray-700" onClick={() => callUser(selectedUser._id, false)} />
                 <Search className="w-5 h-5 cursor-pointer hover:text-gray-700 hidden sm:block" />
-                <MoreVertical className="w-5 h-5 cursor-pointer hover:text-gray-700" />
+                <div className="relative">
+                  <MoreVertical 
+                    className="w-5 h-5 cursor-pointer hover:text-gray-700" 
+                    onClick={() => setShowDropdown(!showDropdown)} 
+                  />
+                  {showDropdown && (
+                    <div className="absolute right-0 top-10 w-56 bg-white shadow-xl rounded-lg py-2 z-50 text-[15px] text-[#3b4a54] border border-gray-100">
+                      <div className="px-5 py-3 hover:bg-[#f5f6f6] cursor-pointer" onClick={() => setShowDropdown(false)}>Add member</div>
+                      <div className="px-5 py-3 hover:bg-[#f5f6f6] cursor-pointer" onClick={() => setShowDropdown(false)}>Group info</div>
+                      <div className="px-5 py-3 hover:bg-[#f5f6f6] cursor-pointer" onClick={() => setShowDropdown(false)}>Search</div>
+                      <div className="px-5 py-3 hover:bg-[#f5f6f6] cursor-pointer" onClick={() => setShowDropdown(false)}>Select messages</div>
+                      <div className="px-5 py-3 hover:bg-[#f5f6f6] cursor-pointer" onClick={() => setShowDropdown(false)}>Mute notifications</div>
+                      <div className="px-5 py-3 hover:bg-[#f5f6f6] cursor-pointer" onClick={() => setShowDropdown(false)}>Disappearing messages</div>
+                      <div className="px-5 py-3 hover:bg-[#f5f6f6] cursor-pointer" onClick={() => setShowDropdown(false)}>Add to favourites</div>
+                      <div className="px-5 py-3 hover:bg-[#f5f6f6] cursor-pointer" onClick={() => setShowDropdown(false)}>Close chat</div>
+                      <div className="border-t border-gray-100 my-1"></div>
+                      <div className="px-5 py-3 hover:bg-[#f5f6f6] cursor-pointer" onClick={() => setShowDropdown(false)}>Clear chat</div>
+                      <div className="px-5 py-3 hover:bg-[#f5f6f6] cursor-pointer" onClick={() => setShowDropdown(false)}>Exit group</div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
