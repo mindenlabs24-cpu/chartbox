@@ -14,7 +14,7 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Missing credentials");
         }
 
-        const res = await fetch("http://localhost:5000/api/auth/login", {
+        const res = await fetch("https://chartbox-ywrc.onrender.com/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

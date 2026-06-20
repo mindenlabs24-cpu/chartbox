@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     const { username, profilePicture, wallpaper } = await req.json();
     const token = (session.user as any).backendToken;
 
-    const response = await fetch("http://localhost:5000/api/user/settings", {
+    const response = await fetch("https://chartbox-ywrc.onrender.com/api/user/settings", {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",

@@ -49,7 +49,7 @@ export default function ChatPage() {
     if (!session?.user) return;
     try {
       const token = (session.user as any).backendToken;
-      const res = await fetch("http://localhost:5000/api/user/all", {
+      const res = await fetch("https://chartbox-ywrc.onrender.com/api/user/all", {
         headers: { "Authorization": `Bearer ${token}` }
       });
       const data = await res.json();
@@ -63,7 +63,7 @@ export default function ChatPage() {
     if (!session?.user) return;
     try {
       const token = (session.user as any).backendToken;
-      const res = await fetch(`http://localhost:5000/api/user/messages/${contactId}`, {
+      const res = await fetch(`https://chartbox-ywrc.onrender.com/api/user/messages/${contactId}`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       const data = await res.json();
@@ -77,7 +77,7 @@ export default function ChatPage() {
     if (session?.user && (session.user as any).id) {
       fetchUsers();
       
-      socketRef.current = io("http://localhost:5000");
+      socketRef.current = io("https://chartbox-ywrc.onrender.com");
       socketRef.current.emit("registerUser", (session.user as any).id);
 
       socketRef.current.on("receiveMessage", (msg) => {
