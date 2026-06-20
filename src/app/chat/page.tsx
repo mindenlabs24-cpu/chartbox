@@ -188,6 +188,8 @@ export default function ChatPage() {
   };
 
   const startRecording = async () => {
+    const isConfirmed = window.confirm("Mfumo unahitaji idhini yako ya kutumia Maikrofoni kurekodi sauti. Je, unakubali?");
+    if (!isConfirmed) return;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -313,6 +315,8 @@ export default function ChatPage() {
 
   // WebRTC Functions
   const setupMediaStream = async (video: boolean) => {
+    const isConfirmed = window.confirm(`Mfumo unahitaji idhini yako ya kutumia ${video ? 'Kamera na Maikrofoni' : 'Maikrofoni'}. Je, unakubali?`);
+    if (!isConfirmed) return null;
     try {
       const currentStream = await navigator.mediaDevices.getUserMedia({ video, audio: true });
       setStream(currentStream);
