@@ -22,6 +22,7 @@ export default function ChatPage() {
   
   // Call States
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [receivingCall, setReceivingCall] = useState(false);
   const [caller, setCaller] = useState("");
   const [callerName, setCallerName] = useState("");
@@ -151,6 +152,18 @@ export default function ChatPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (stream && myVideo.current) {
+      myVideo.current.srcObject = stream;
+    }
+  }, [stream]);
+
+  useEffect(() => {
+    if (remoteStream && userVideo.current) {
+      userVideo.current.srcObject = remoteStream;
+    }
+  }, [remoteStream, callAccepted]);
 
   const handleSelectUser = (user: any) => {
     setSelectedUser(user);
@@ -303,9 +316,6 @@ export default function ChatPage() {
     try {
       const currentStream = await navigator.mediaDevices.getUserMedia({ video, audio: true });
       setStream(currentStream);
-      if (myVideo.current) {
-        myVideo.current.srcObject = currentStream;
-      }
       return currentStream;
     } catch (err) {
       console.error("Failed to get media", err);
@@ -328,9 +338,7 @@ export default function ChatPage() {
     });
 
     peerConnection.ontrack = (event) => {
-      if (userVideo.current) {
-        userVideo.current.srcObject = event.streams[0];
-      }
+      setRemoteStream(event.streams[0]);
     };
 
     peerConnection.onicecandidate = (event) => {
@@ -368,9 +376,7 @@ export default function ChatPage() {
     }
 
     peerConnection.ontrack = (event) => {
-      if (userVideo.current) {
-        userVideo.current.srcObject = event.streams[0];
-      }
+      setRemoteStream(event.streams[0]);
     };
 
     peerConnection.onicecandidate = (event) => {
@@ -400,6 +406,7 @@ export default function ChatPage() {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
     }
+    setRemoteStream(null);
     setCallAccepted(false);
     setReceivingCall(false);
     setCaller("");
