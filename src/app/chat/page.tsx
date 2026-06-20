@@ -38,6 +38,13 @@ export default function ChatPage() {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Voice Recording state
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   const socketRef = useRef<Socket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
@@ -165,6 +172,86 @@ export default function ChatPage() {
     });
 
     setMessageText("");
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        await uploadAudio(audioBlob);
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+
+      timerIntervalRef.current = setInterval(() => {
+        setRecordingTime((prev) => prev + 1);
+      }, 1000);
+    } catch (err) {
+      console.error("Error accessing microphone:", err);
+      alert("Haikuweza kupata idhini ya kutumia Maikrofoni yako.");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+    }
+  };
+
+  const uploadAudio = async (audioBlob: Blob) => {
+    if (!selectedUser || !session?.user) return;
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('file', audioBlob, 'voice_note.webm');
+
+    try {
+      const res = await fetch('https://chartbox-ywrc.onrender.com/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      
+      if (res.ok && data.url) {
+        socketRef.current?.emit("sendMessage", {
+          senderId: (session.user as any).id,
+          receiverId: selectedUser._id,
+          content: '',
+          mediaUrl: data.url,
+          mediaType: 'audio'
+        });
+      } else {
+        alert('Hitilafu: ' + (data.message || 'Haikuweza kutuma sauti.'));
+      }
+    } catch (err) {
+      console.error('Upload failed', err);
+      alert('Sauti haikuweza kutumwa.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const formatRecordingTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
   };
 
   const handleDeleteMessage = (messageId: string) => {
@@ -545,24 +632,35 @@ export default function ChatPage() {
                 onClick={() => fileInputRef.current?.click()}
               />
               
-              <div className="flex-1 bg-white rounded-full flex items-center px-6 py-4 shadow-sm border border-gray-100">
-                <input 
-                  type="text" 
-                  className="bg-transparent border-none outline-none text-[17px] text-gray-800 w-full"
-                  placeholder={uploading ? "Inapakia faili..." : "Type a message"}
-                  value={messageText}
-                  disabled={uploading}
-                  onChange={e => setMessageText(e.target.value)}
-                  onKeyPress={e => e.key === 'Enter' && handleSendMessage()}
-                />
+              <div className="flex-1 bg-white rounded-full flex items-center px-6 py-4 shadow-sm border border-gray-100 overflow-hidden">
+                {isRecording ? (
+                  <div className="flex items-center text-red-500 font-medium animate-pulse w-full">
+                    <Mic className="w-5 h-5 mr-2" />
+                    Kurekodi... {formatRecordingTime(recordingTime)}
+                  </div>
+                ) : (
+                  <input 
+                    type="text" 
+                    className="bg-transparent border-none outline-none text-[17px] text-gray-800 w-full"
+                    placeholder={uploading ? "Inapakia..." : "Type a message"}
+                    value={messageText}
+                    disabled={uploading}
+                    onChange={e => setMessageText(e.target.value)}
+                    onKeyPress={e => e.key === 'Enter' && handleSendMessage()}
+                  />
+                )}
               </div>
 
               {messageText.trim() ? (
                 <button onClick={handleSendMessage} className="text-gray-500 hover:text-green-600 transition">
                   <Send className="w-6 h-6" />
                 </button>
+              ) : isRecording ? (
+                <button onClick={stopRecording} className="bg-red-500 text-white rounded-full p-2.5 hover:bg-red-600 transition shadow-lg">
+                  <Send className="w-5 h-5" />
+                </button>
               ) : (
-                <Mic className="w-6 h-6 text-gray-500 cursor-pointer" />
+                <Mic className="w-6 h-6 text-gray-500 cursor-pointer hover:text-green-600" onClick={startRecording} />
               )}
             </div>
           </>
