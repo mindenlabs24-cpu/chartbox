@@ -7,6 +7,7 @@ const { Server } = require('socket.io');
 
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
+const uploadRoutes = require('./routes/upload');
 
 const app = express();
 const server = http.createServer(app);
@@ -20,6 +21,7 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Socket.io Setup
 const Message = require('./models/Message');
@@ -34,9 +36,9 @@ io.on('connection', (socket) => {
   });
 
   socket.on('sendMessage', async (data) => {
-    const { senderId, receiverId, content } = data;
+    const { senderId, receiverId, content, mediaUrl, mediaType } = data;
     try {
-      const newMessage = new Message({ senderId, receiverId, content });
+      const newMessage = new Message({ senderId, receiverId, content, mediaUrl, mediaType });
       const savedMessage = await newMessage.save();
 
       const receiverSocketId = onlineUsers.get(receiverId);
