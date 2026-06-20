@@ -12,6 +12,8 @@ export default function DashboardPage() {
   const [profilePicture, setProfilePicture] = useState("");
   const [wallpaper, setWallpaper] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
+  const [uploadingProfile, setUploadingProfile] = useState(false);
+  const [uploadingWallpaper, setUploadingWallpaper] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -21,6 +23,38 @@ export default function DashboardPage() {
       setUsername(session.user.name);
     }
   }, [status, session, router]);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'wallpaper') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (type === 'profile') setUploadingProfile(true);
+    if (type === 'wallpaper') setUploadingWallpaper(true);
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('https://chartbox-ywrc.onrender.com/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      
+      if (res.ok && data.url) {
+        if (type === 'profile') setProfilePicture(data.url);
+        if (type === 'wallpaper') setWallpaper(data.url);
+        setStatusMessage(`Picha imepakiwa kikamilifu! Usisahau kusave.`);
+      } else {
+        setStatusMessage('Hitilafu: ' + (data.message || 'Haikuweza kupakia.'));
+      }
+    } catch (err) {
+      setStatusMessage('Picha haikuweza kupakiwa.');
+    } finally {
+      if (type === 'profile') setUploadingProfile(false);
+      if (type === 'wallpaper') setUploadingWallpaper(false);
+    }
+  };
 
   const handleSave = async () => {
     setStatusMessage("Inahifadhi...");
@@ -106,28 +140,32 @@ export default function DashboardPage() {
 
             <div>
               <label className="block mb-2 text-sm text-[#667781]">
-                Picha ya Wasifu (Profile Picture URL)
+                Picha ya Wasifu (Profile Picture)
               </label>
-              <input
-                type="text"
-                className="input-field w-full"
-                placeholder="Weka link ya picha..."
-                value={profilePicture}
-                onChange={(e) => setProfilePicture(e.target.value)}
-              />
+              <div className="flex gap-4 items-center">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="input-field w-full"
+                  onChange={(e) => handleImageUpload(e, 'profile')}
+                />
+                {uploadingProfile && <span className="text-sm text-gray-500">Inapakia...</span>}
+              </div>
             </div>
 
             <div>
               <label className="block mb-2 text-sm text-[#667781]">
-                Picha ya Nyuma (Background Wallpaper URL)
+                Picha ya Nyuma (Background Wallpaper)
               </label>
-              <input
-                type="text"
-                className="input-field w-full"
-                placeholder="Weka link ya background..."
-                value={wallpaper}
-                onChange={(e) => setWallpaper(e.target.value)}
-              />
+              <div className="flex gap-4 items-center">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="input-field w-full"
+                  onChange={(e) => handleImageUpload(e, 'wallpaper')}
+                />
+                {uploadingWallpaper && <span className="text-sm text-gray-500">Inapakia...</span>}
+              </div>
             </div>
 
             <button className="btn-primary mt-4 w-full md:w-auto" onClick={handleSave}>

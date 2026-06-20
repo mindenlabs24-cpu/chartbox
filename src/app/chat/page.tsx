@@ -35,6 +35,8 @@ export default function ChatPage() {
   
   // Dropdown state
   const [showDropdown, setShowDropdown] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const socketRef = useRef<Socket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -159,6 +161,41 @@ export default function ChatPage() {
     });
 
     setMessageText("");
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedUser || !session?.user) return;
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('https://chartbox-ywrc.onrender.com/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      
+      if (res.ok && data.url) {
+        socketRef.current?.emit("sendMessage", {
+          senderId: (session.user as any).id,
+          receiverId: selectedUser._id,
+          content: '',
+          mediaUrl: data.url,
+          mediaType: data.mediaType
+        });
+      } else {
+        alert('Hitilafu: ' + (data.message || 'Haikuweza kupakia.'));
+      }
+    } catch (err) {
+      console.error('Upload failed', err);
+      alert('Faili halikuweza kutumwa.');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   // WebRTC Functions
@@ -440,23 +477,36 @@ export default function ChatPage() {
                 return (
                   <div key={msg._id} className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-1`}>
                     <div 
-                      className={`relative flex flex-wrap items-end max-w-[85%] md:max-w-[65%] px-3 py-1.5 rounded-lg shadow-sm ${isMine ? 'bg-[#d9fdd3]' : 'bg-white'}`}
+                      className={`relative flex flex-col items-end max-w-[85%] md:max-w-[65%] px-3 py-1.5 rounded-lg shadow-sm ${isMine ? 'bg-[#d9fdd3]' : 'bg-white'}`}
                       style={{ borderTopRightRadius: isMine ? 0 : '0.5rem', borderTopLeftRadius: !isMine ? 0 : '0.5rem' }}
                     >
-                      <span className="text-[#111b21] text-[15px] leading-relaxed break-words max-w-full pb-0.5">
-                        {msg.content}
-                      </span>
-                      <div className="flex items-center ml-3 mb-0.5 whitespace-nowrap self-end flex-shrink-0" style={{ marginLeft: 'auto', paddingLeft: '10px' }}>
-                        <span className="text-[10px] text-gray-500">
-                          {formatTime(msg.createdAt)}
-                        </span>
-                        {isMine && (
-                          <span className="ml-1.5 text-[13px] leading-none">
-                            {msg.status === 'sent' && <span className="text-gray-500">✓</span>}
-                            {msg.status === 'delivered' && <span className="text-gray-500 tracking-[-2px]">✓✓</span>}
-                            {(!msg.status || msg.status === 'read') && <span className="text-blue-500 tracking-[-2px]">✓✓</span>}
+                      {msg.mediaUrl && (
+                        <div className="mb-1 w-full max-w-full">
+                          {msg.mediaType === 'image' && <img src={msg.mediaUrl} alt="Media" className="max-w-[200px] md:max-w-[300px] rounded-lg cursor-pointer" onClick={() => window.open(msg.mediaUrl, '_blank')} />}
+                          {msg.mediaType === 'video' && <video src={msg.mediaUrl} controls className="max-w-[200px] md:max-w-[300px] rounded-lg" />}
+                          {msg.mediaType === 'audio' && <audio src={msg.mediaUrl} controls className="w-[200px] md:w-[250px]" />}
+                          {msg.mediaType === 'unknown' && <a href={msg.mediaUrl} target="_blank" rel="noreferrer" className="text-blue-500 underline text-sm">Tazama Faili</a>}
+                        </div>
+                      )}
+                      
+                      <div className="flex flex-wrap items-end w-full">
+                        {msg.content && (
+                          <span className="text-[#111b21] text-[15px] leading-relaxed break-words max-w-full pb-0.5">
+                            {msg.content}
                           </span>
                         )}
+                        <div className="flex items-center ml-3 mb-0.5 whitespace-nowrap self-end flex-shrink-0" style={{ marginLeft: 'auto', paddingLeft: '10px' }}>
+                          <span className="text-[10px] text-gray-500">
+                            {formatTime(msg.createdAt)}
+                          </span>
+                          {isMine && (
+                            <span className="ml-1.5 text-[13px] leading-none">
+                              {msg.status === 'sent' && <span className="text-gray-500">✓</span>}
+                              {msg.status === 'delivered' && <span className="text-gray-500 tracking-[-2px]">✓✓</span>}
+                              {(!msg.status || msg.status === 'read') && <span className="text-blue-500 tracking-[-2px]">✓✓</span>}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -468,14 +518,20 @@ export default function ChatPage() {
             {/* Chat Input Area */}
             <div className="bg-[#f0f2f5] px-4 py-4 flex items-center gap-4 z-10">
               <Smile className="w-7 h-7 text-gray-500 cursor-pointer hidden sm:block" />
-              <Paperclip className="w-7 h-7 text-gray-500 cursor-pointer hidden sm:block" />
+              
+              <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*,video/*,audio/*" />
+              <Paperclip 
+                className="w-7 h-7 text-gray-500 cursor-pointer hidden sm:block" 
+                onClick={() => fileInputRef.current?.click()}
+              />
               
               <div className="flex-1 bg-white rounded-full flex items-center px-6 py-4 shadow-sm border border-gray-100">
                 <input 
                   type="text" 
                   className="bg-transparent border-none outline-none text-[17px] text-gray-800 w-full"
-                  placeholder="Type a message"
+                  placeholder={uploading ? "Inapakia faili..." : "Type a message"}
                   value={messageText}
+                  disabled={uploading}
                   onChange={e => setMessageText(e.target.value)}
                   onKeyPress={e => e.key === 'Enter' && handleSendMessage()}
                 />
