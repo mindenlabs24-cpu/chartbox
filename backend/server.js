@@ -52,6 +52,21 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('deleteMessage', async (data) => {
+    const { messageId, receiverId } = data;
+    try {
+      await Message.findByIdAndDelete(messageId);
+      
+      const receiverSocketId = onlineUsers.get(receiverId);
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit('messageDeleted', messageId);
+      }
+      socket.emit('messageDeleted', messageId);
+    } catch (err) {
+      console.error('Error deleting message:', err);
+    }
+  });
+
   // WebRTC Signaling
   socket.on('callUser', ({ userToCall, signalData, from, name }) => {
     const receiverSocketId = onlineUsers.get(userToCall);

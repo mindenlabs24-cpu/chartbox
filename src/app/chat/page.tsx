@@ -7,7 +7,7 @@ import { io, Socket } from "socket.io-client";
 import Link from "next/link";
 import { 
   MoreVertical, MessageSquare, Phone, Video, Search, 
-  Smile, Paperclip, Mic, Send, ArrowLeft, Settings
+  Smile, Paperclip, Mic, Send, ArrowLeft, Settings, Trash2
 } from "lucide-react"; // Make sure lucide-react is installed, if not we will install it or use emojis
 
 export default function ChatPage() {
@@ -101,6 +101,10 @@ export default function ChatPage() {
         setMessages((prev) => [...prev, msg]);
       });
 
+      socketRef.current.on("messageDeleted", (messageId) => {
+        setMessages((prev) => prev.filter(msg => msg._id !== messageId));
+      });
+
       // WebRTC Listeners
       socketRef.current.on("callUser", (data) => {
         setReceivingCall(true);
@@ -161,6 +165,15 @@ export default function ChatPage() {
     });
 
     setMessageText("");
+  };
+
+  const handleDeleteMessage = (messageId: string) => {
+    if (confirm("Je, una uhakika unataka kufuta meseji hii?")) {
+      socketRef.current?.emit("deleteMessage", {
+        messageId,
+        receiverId: selectedUser._id
+      });
+    }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -500,11 +513,18 @@ export default function ChatPage() {
                             {formatTime(msg.createdAt)}
                           </span>
                           {isMine && (
-                            <span className="ml-1.5 text-[13px] leading-none">
-                              {msg.status === 'sent' && <span className="text-gray-500">✓</span>}
-                              {msg.status === 'delivered' && <span className="text-gray-500 tracking-[-2px]">✓✓</span>}
-                              {(!msg.status || msg.status === 'read') && <span className="text-blue-500 tracking-[-2px]">✓✓</span>}
-                            </span>
+                            <>
+                              <span className="ml-1.5 text-[13px] leading-none">
+                                {msg.status === 'sent' && <span className="text-gray-500">✓</span>}
+                                {msg.status === 'delivered' && <span className="text-gray-500 tracking-[-2px]">✓✓</span>}
+                                {(!msg.status || msg.status === 'read') && <span className="text-blue-500 tracking-[-2px]">✓✓</span>}
+                              </span>
+                              <Trash2 
+                                className="w-3.5 h-3.5 ml-2 text-gray-400 cursor-pointer hover:text-red-500 transition-colors"
+                                onClick={() => handleDeleteMessage(msg._id)}
+                                title="Futa Meseji"
+                              />
+                            </>
                           )}
                         </div>
                       </div>
