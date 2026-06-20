@@ -440,22 +440,24 @@ export default function ChatPage() {
                 return (
                   <div key={msg._id} className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-1`}>
                     <div 
-                      className={`relative min-w-[100px] max-w-[85%] md:max-w-[65%] px-3 py-2 rounded-lg shadow-sm ${isMine ? 'bg-[#d9fdd3]' : 'bg-white'}`}
+                      className={`relative flex flex-wrap items-end max-w-[85%] md:max-w-[65%] px-3 py-1.5 rounded-lg shadow-sm ${isMine ? 'bg-[#d9fdd3]' : 'bg-white'}`}
                       style={{ borderTopRightRadius: isMine ? 0 : '0.5rem', borderTopLeftRadius: !isMine ? 0 : '0.5rem' }}
                     >
-                      <span className="text-[#111b21] text-[15px] leading-relaxed break-words block pr-16 pb-3">
+                      <span className="text-[#111b21] text-[15px] leading-relaxed break-words max-w-full pb-0.5">
                         {msg.content}
                       </span>
-                      <span className="text-[10px] text-gray-500 absolute bottom-1 right-2 flex items-center">
-                        {formatTime(msg.createdAt)}
+                      <div className="flex items-center ml-3 mb-0.5 whitespace-nowrap self-end flex-shrink-0" style={{ marginLeft: 'auto', paddingLeft: '10px' }}>
+                        <span className="text-[10px] text-gray-500">
+                          {formatTime(msg.createdAt)}
+                        </span>
                         {isMine && (
-                          <span className="ml-1 text-[13px] leading-none">
+                          <span className="ml-1.5 text-[13px] leading-none">
                             {msg.status === 'sent' && <span className="text-gray-500">✓</span>}
                             {msg.status === 'delivered' && <span className="text-gray-500 tracking-[-2px]">✓✓</span>}
                             {(!msg.status || msg.status === 'read') && <span className="text-blue-500 tracking-[-2px]">✓✓</span>}
                           </span>
                         )}
-                      </span>
+                      </div>
                     </div>
                   </div>
                 );
