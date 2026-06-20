@@ -212,9 +212,9 @@ export default function ChatPage() {
       timerIntervalRef.current = setInterval(() => {
         setRecordingTime((prev) => prev + 1);
       }, 1000);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error accessing microphone:", err);
-      alert("Haikuweza kupata idhini ya kutumia Maikrofoni yako.");
+      alert("Haikuweza kupata idhini ya kutumia Maikrofoni yako. Sababu: " + err.message);
     }
   };
 
@@ -317,9 +317,9 @@ export default function ChatPage() {
       const currentStream = await navigator.mediaDevices.getUserMedia({ video, audio: true });
       setStream(currentStream);
       return currentStream;
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to get media", err);
-      alert("Haikuweza kupata idhini ya kutumia Kamera au Maikrofoni yako.");
+      alert("Haikuweza kupata idhini ya kutumia Kamera au Maikrofoni yako. Sababu: " + err.message);
       return null;
     }
   };
@@ -616,7 +616,6 @@ export default function ChatPage() {
                               <Trash2 
                                 className="w-3.5 h-3.5 ml-2 text-gray-400 cursor-pointer hover:text-red-500 transition-colors"
                                 onClick={() => handleDeleteMessage(msg._id)}
-                                title="Futa Meseji"
                               />
                             </>
                           )}
