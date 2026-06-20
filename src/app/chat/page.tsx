@@ -464,14 +464,14 @@ export default function ChatPage() {
             </div>
 
             {/* Chat Input Area */}
-            <div className="bg-[#f0f2f5] px-4 py-3 flex items-center gap-3 z-10">
-              <Smile className="w-6 h-6 text-gray-500 cursor-pointer hidden sm:block" />
-              <Paperclip className="w-6 h-6 text-gray-500 cursor-pointer hidden sm:block" />
+            <div className="bg-[#f0f2f5] px-4 py-4 flex items-center gap-4 z-10">
+              <Smile className="w-7 h-7 text-gray-500 cursor-pointer hidden sm:block" />
+              <Paperclip className="w-7 h-7 text-gray-500 cursor-pointer hidden sm:block" />
               
-              <div className="flex-1 bg-white rounded-xl flex items-center px-5 py-3 shadow-sm border border-gray-100">
+              <div className="flex-1 bg-white rounded-full flex items-center px-6 py-4 shadow-sm border border-gray-100">
                 <input 
                   type="text" 
-                  className="bg-transparent border-none outline-none text-[16px] text-gray-800 w-full"
+                  className="bg-transparent border-none outline-none text-[17px] text-gray-800 w-full"
                   placeholder="Type a message"
                   value={messageText}
                   onChange={e => setMessageText(e.target.value)}
