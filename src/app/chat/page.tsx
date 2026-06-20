@@ -440,15 +440,21 @@ export default function ChatPage() {
                 return (
                   <div key={msg._id} className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-1`}>
                     <div 
-                      className={`relative max-w-[85%] md:max-w-[65%] px-3 py-2 rounded-lg shadow-sm ${isMine ? 'bg-[#d9fdd3]' : 'bg-white'}`}
+                      className={`relative min-w-[100px] max-w-[85%] md:max-w-[65%] px-3 py-2 rounded-lg shadow-sm ${isMine ? 'bg-[#d9fdd3]' : 'bg-white'}`}
                       style={{ borderTopRightRadius: isMine ? 0 : '0.5rem', borderTopLeftRadius: !isMine ? 0 : '0.5rem' }}
                     >
-                      <span className="text-[#111b21] text-[15px] leading-relaxed break-words block pr-12 pb-1">
+                      <span className="text-[#111b21] text-[15px] leading-relaxed break-words block pr-16 pb-3">
                         {msg.content}
                       </span>
-                      <span className="text-[10px] text-gray-500 absolute bottom-1 right-2">
+                      <span className="text-[10px] text-gray-500 absolute bottom-1 right-2 flex items-center">
                         {formatTime(msg.createdAt)}
-                        {isMine && <span className="ml-1 text-blue-500">✓✓</span>}
+                        {isMine && (
+                          <span className="ml-1 text-[13px] leading-none">
+                            {msg.status === 'sent' && <span className="text-gray-500">✓</span>}
+                            {msg.status === 'delivered' && <span className="text-gray-500 tracking-[-2px]">✓✓</span>}
+                            {(!msg.status || msg.status === 'read') && <span className="text-blue-500 tracking-[-2px]">✓✓</span>}
+                          </span>
+                        )}
                       </span>
                     </div>
                   </div>
@@ -462,10 +468,10 @@ export default function ChatPage() {
               <Smile className="w-6 h-6 text-gray-500 cursor-pointer hidden sm:block" />
               <Paperclip className="w-6 h-6 text-gray-500 cursor-pointer hidden sm:block" />
               
-              <div className="flex-1 bg-white rounded-lg flex items-center px-4 py-2 shadow-sm">
+              <div className="flex-1 bg-white rounded-xl flex items-center px-5 py-3 shadow-sm border border-gray-100">
                 <input 
                   type="text" 
-                  className="bg-transparent border-none outline-none text-[15px] text-gray-800 w-full"
+                  className="bg-transparent border-none outline-none text-[16px] text-gray-800 w-full"
                   placeholder="Type a message"
                   value={messageText}
                   onChange={e => setMessageText(e.target.value)}
