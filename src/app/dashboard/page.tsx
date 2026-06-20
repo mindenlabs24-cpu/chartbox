@@ -42,7 +42,7 @@ export default function DashboardPage() {
   };
 
   if (status === "loading") {
-    return <div className="flex justify-center items-center min-h-screen text-gray-400">Inapakia...</div>;
+    return <div className="flex justify-center items-center min-h-screen text-[#667781]">Inapakia...</div>;
   }
 
   return (
@@ -66,7 +66,7 @@ export default function DashboardPage() {
               }} 
             />
             <h2 className="text-2xl font-semibold">{session?.user?.name}</h2>
-            <p className="text-gray-400 mt-1">Online</p>
+            <p className="text-[#667781] mt-1">Online</p>
           </div>
           
           <div className="flex flex-col gap-4">
@@ -93,7 +93,7 @@ export default function DashboardPage() {
 
           <div className="flex flex-col gap-6">
             <div>
-              <label className="block mb-2 text-sm text-gray-400">
+              <label className="block mb-2 text-sm text-[#667781]">
                 Badilisha Jina (Username)
               </label>
               <input
@@ -105,7 +105,7 @@ export default function DashboardPage() {
             </div>
 
             <div>
-              <label className="block mb-2 text-sm text-gray-400">
+              <label className="block mb-2 text-sm text-[#667781]">
                 Picha ya Wasifu (Profile Picture URL)
               </label>
               <input
@@ -118,7 +118,7 @@ export default function DashboardPage() {
             </div>
 
             <div>
-              <label className="block mb-2 text-sm text-gray-400">
+              <label className="block mb-2 text-sm text-[#667781]">
                 Picha ya Nyuma (Background Wallpaper URL)
               </label>
               <input

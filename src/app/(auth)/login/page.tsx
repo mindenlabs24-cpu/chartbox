@@ -41,7 +41,7 @@ export default function LoginPage() {
         <h2 className="title-gradient text-3xl md:text-4xl mb-2 text-center font-bold">
           Karibu Tena
         </h2>
-        <p className="text-gray-400 text-center mb-8 text-sm md:text-base">
+        <p className="text-[#667781] text-center mb-8 text-sm md:text-base">
           Ingia kwenye akaunti yako ya CHART BOX
         </p>
 
@@ -53,7 +53,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           <div>
-            <label className="block mb-2 text-sm text-gray-400">
+            <label className="block mb-2 text-sm text-[#667781]">
               Jina la Mtumiaji (Username)
             </label>
             <input
@@ -66,7 +66,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block mb-2 text-sm text-gray-400">
+            <label className="block mb-2 text-sm text-[#667781]">
               Nenosiri (Password)
             </label>
             <input
@@ -83,8 +83,8 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="mt-8 text-center text-sm text-gray-400">
-          Huna akaunti? <Link href="/register" className="text-blue-500 font-medium hover:underline">Jisajili hapa</Link>
+        <div className="mt-8 text-center text-sm text-[#667781]">
+          Huna akaunti? <Link href="/register" className="text-[#25d366] font-medium hover:underline">Jisajili hapa</Link>
         </div>
       </div>
     </main>

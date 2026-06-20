@@ -42,7 +42,7 @@ export default function RegisterPage() {
         <h2 className="title-gradient text-3xl md:text-4xl mb-2 text-center font-bold">
           Tengeneza Akaunti
         </h2>
-        <p className="text-gray-400 text-center mb-8 text-sm md:text-base">
+        <p className="text-[#667781] text-center mb-8 text-sm md:text-base">
           Jiunge na CHART BOX leo bure kabisa
         </p>
 
@@ -54,7 +54,7 @@ export default function RegisterPage() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           <div>
-            <label className="block mb-2 text-sm text-gray-400">
+            <label className="block mb-2 text-sm text-[#667781]">
               Jina Kamili (Username)
             </label>
             <input
@@ -67,7 +67,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block mb-2 text-sm text-gray-400">
+            <label className="block mb-2 text-sm text-[#667781]">
               Namba ya Simu (Phone Number)
             </label>
             <input
@@ -80,7 +80,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block mb-2 text-sm text-gray-400">
+            <label className="block mb-2 text-sm text-[#667781]">
               Nenosiri (Password)
             </label>
             <input
@@ -97,8 +97,8 @@ export default function RegisterPage() {
           </button>
         </form>
 
-        <div className="mt-8 text-center text-sm text-gray-400">
-          Tayari una akaunti? <Link href="/login" className="text-blue-500 font-medium hover:underline">Ingia hapa</Link>
+        <div className="mt-8 text-center text-sm text-[#667781]">
+          Tayari una akaunti? <Link href="/login" className="text-[#25d366] font-medium hover:underline">Ingia hapa</Link>
         </div>
       </div>
     </main>
