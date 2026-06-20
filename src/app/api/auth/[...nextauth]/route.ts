@@ -45,6 +45,7 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
+  secret: "siri_nzito_sana_ya_chartbox_2026_xyz",
   pages: {
     signIn: "/login",
   },
