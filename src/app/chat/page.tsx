@@ -631,6 +631,19 @@ export default function ChatPage() {
                 className="w-7 h-7 text-gray-500 cursor-pointer hidden sm:block" 
                 onClick={() => fileInputRef.current?.click()}
               />
+
+              {/* Mic Button on the left */}
+              {!messageText.trim() && (
+                isRecording ? (
+                  <button onClick={stopRecording} className="bg-red-500 text-white rounded-full w-[45px] h-[45px] flex items-center justify-center hover:bg-red-600 transition shadow-md flex-shrink-0 animate-pulse ml-2">
+                    <Send className="w-5 h-5 ml-1" />
+                  </button>
+                ) : (
+                  <button onClick={startRecording} className="bg-[#00a884] text-white rounded-full w-[45px] h-[45px] flex items-center justify-center hover:bg-[#008f6f] transition shadow-md flex-shrink-0 ml-2">
+                    <Mic className="w-5 h-5" />
+                  </button>
+                )
+              )}
               
               <div className="flex-1 bg-white rounded-full flex items-center px-6 py-4 shadow-sm border border-gray-100 overflow-hidden">
                 {isRecording ? (
@@ -655,14 +668,8 @@ export default function ChatPage() {
                 <button onClick={handleSendMessage} className="bg-[#00a884] text-white rounded-full w-[50px] h-[50px] flex items-center justify-center hover:bg-[#008f6f] transition shadow-md flex-shrink-0">
                   <Send className="w-5 h-5 ml-1" />
                 </button>
-              ) : isRecording ? (
-                <button onClick={stopRecording} className="bg-red-500 text-white rounded-full w-[50px] h-[50px] flex items-center justify-center hover:bg-red-600 transition shadow-md flex-shrink-0 animate-pulse">
-                  <Send className="w-5 h-5 ml-1" />
-                </button>
               ) : (
-                <button onClick={startRecording} className="bg-[#00a884] text-white rounded-full w-[50px] h-[50px] flex items-center justify-center hover:bg-[#008f6f] transition shadow-md flex-shrink-0">
-                  <Mic className="w-6 h-6" />
-                </button>
+                <div className="w-[50px]"></div>
               )}
             </div>
           </>
