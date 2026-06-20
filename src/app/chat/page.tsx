@@ -397,8 +397,8 @@ export default function ChatPage() {
                 </div>
               </div>
               <div className="flex items-center gap-5 text-gray-500">
-                <Video className="w-5 h-5 cursor-pointer hover:text-gray-700" onClick={() => callUser(selectedUser._id, true)} title="Video Call" />
-                <Phone className="w-5 h-5 cursor-pointer hover:text-gray-700" onClick={() => callUser(selectedUser._id, false)} title="Voice Call" />
+                <Video className="w-5 h-5 cursor-pointer hover:text-gray-700" onClick={() => callUser(selectedUser._id, true)} />
+                <Phone className="w-5 h-5 cursor-pointer hover:text-gray-700" onClick={() => callUser(selectedUser._id, false)} />
                 <Search className="w-5 h-5 cursor-pointer hover:text-gray-700 hidden sm:block" />
                 <MoreVertical className="w-5 h-5 cursor-pointer hover:text-gray-700" />
               </div>
