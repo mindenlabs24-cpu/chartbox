@@ -26,7 +26,7 @@ export default function LoginPage() {
       if (res?.error) {
         setError('Jina la mtumiaji au nenosiri si sahihi');
       } else {
-        router.push('/dashboard');
+        router.push("/chat");
       }
     } catch (err) {
       setError('Hitilafu imetokea. Tafadhali jaribu tena.');

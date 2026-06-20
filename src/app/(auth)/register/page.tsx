@@ -28,7 +28,7 @@ export default function RegisterPage() {
         throw new Error(data.message || 'Hitilafu imetokea');
       }
 
-      router.push('/login');
+      router.push("/login");
     } catch (err: any) {
       setError(err.message);
     } finally {

@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import Link from "next/link";
+import { 
+  MoreVertical, MessageSquare, Phone, Video, Search, 
+  Smile, Paperclip, Mic, Send, ArrowLeft, Settings
+} from "lucide-react"; // Make sure lucide-react is installed, if not we will install it or use emojis
 
 export default function ChatPage() {
   const { data: session, status } = useSession();
@@ -14,6 +18,7 @@ export default function ChatPage() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [messageText, setMessageText] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   
   // Call States
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -24,6 +29,9 @@ export default function ChatPage() {
   const [callAccepted, setCallAccepted] = useState(false);
   const [callEnded, setCallEnded] = useState(false);
   const [isVideoCall, setIsVideoCall] = useState(false);
+  
+  // Responsive UI state
+  const [showChatArea, setShowChatArea] = useState(false);
 
   const socketRef = useRef<Socket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -131,6 +139,11 @@ export default function ChatPage() {
   const handleSelectUser = (user: any) => {
     setSelectedUser(user);
     fetchMessages(user._id);
+    setShowChatArea(true); // Switch to chat view on mobile
+  };
+
+  const handleBackToList = () => {
+    setShowChatArea(false); // Return to list view on mobile
   };
 
   const handleSendMessage = () => {
@@ -156,6 +169,7 @@ export default function ChatPage() {
       return currentStream;
     } catch (err) {
       console.error("Failed to get media", err);
+      alert("Haikuweza kupata idhini ya kutumia Kamera au Maikrofoni yako.");
       return null;
     }
   };
@@ -250,7 +264,6 @@ export default function ChatPage() {
     setReceivingCall(false);
     setCaller("");
     setCallerSignal(null);
-    window.location.reload(); // Refresh to clear state properly
   };
 
   const endCall = () => {
@@ -258,103 +271,162 @@ export default function ChatPage() {
     endCallLocally();
   };
 
-  if (status === "loading" || !session) return <div style={{ color: 'white', padding: '2rem' }}>Inapakia...</div>;
+  const formatTime = (isoString: string) => {
+    const date = new Date(isoString);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  if (status === "loading" || !session) return <div className="flex h-screen items-center justify-center bg-[#f0f2f5] text-gray-500">Inapakia WhatsApp...</div>;
+
+  const filteredUsers = users.filter(u => u.username.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
-    <main style={{ minHeight: '100vh', display: 'flex', background: 'var(--bg-color)', padding: '2rem', gap: '2rem', position: 'relative' }}>
+    <div className="flex h-screen w-full bg-[#f0f2f5] overflow-hidden font-sans">
       
-      {/* Call Notification Overlay */}
+      {/* Call Notifications */}
       {receivingCall && !callAccepted && (
-        <div style={{ position: 'absolute', top: 20, right: 20, background: 'var(--glass-bg)', padding: '20px', borderRadius: '15px', zIndex: 1000, border: '1px solid var(--primary-color)', boxShadow: '0 0 20px rgba(0,0,0,0.5)' }}>
-          <h3 style={{ color: 'white' }}>{callerName} anapiga simu...</h3>
-          <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-            <button className="btn-primary" onClick={answerCall}>Pokea</button>
-            <button className="btn-secondary" style={{ color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }} onClick={endCallLocally}>Kataa</button>
+        <div className="absolute top-5 right-5 bg-white p-5 rounded-lg shadow-2xl z-50 flex flex-col items-center border border-gray-200">
+          <p className="text-lg font-semibold text-gray-800 mb-4">{callerName} anapiga simu...</p>
+          <div className="flex gap-4">
+            <button className="bg-green-500 text-white px-6 py-2 rounded-full font-medium hover:bg-green-600 transition" onClick={answerCall}>Pokea</button>
+            <button className="bg-red-500 text-white px-6 py-2 rounded-full font-medium hover:bg-red-600 transition" onClick={endCallLocally}>Kataa</button>
           </div>
         </div>
       )}
 
-      {/* Video/Audio Call Overlay */}
+      {/* Video Call Overlay */}
       {(stream || callAccepted) && (
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.9)', zIndex: 999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ display: 'flex', gap: '2rem', marginBottom: '2rem' }}>
+        <div className="absolute inset-0 bg-black z-40 flex flex-col items-center justify-center p-4">
+          <div className="flex flex-col md:flex-row gap-4 mb-8 w-full max-w-5xl justify-center items-center">
             {stream && (
-              <video playsInline muted ref={myVideo} autoPlay style={{ width: '300px', borderRadius: '15px', border: '2px solid var(--primary-color)' }} />
+              <video playsInline muted ref={myVideo} autoPlay className="w-48 md:w-64 bg-gray-800 rounded-lg shadow-lg border-2 border-green-500" />
             )}
             {callAccepted && !callEnded && (
-              <video playsInline ref={userVideo} autoPlay style={{ width: '600px', borderRadius: '15px', border: '2px solid var(--secondary-color)' }} />
+              <video playsInline ref={userVideo} autoPlay className="w-full md:w-[600px] bg-gray-800 rounded-lg shadow-lg" />
             )}
           </div>
-          <button className="btn-secondary" style={{ background: '#ef4444', color: 'white', border: 'none', padding: '15px 40px', fontSize: '1.2rem', borderRadius: '30px' }} onClick={endCall}>Kata Simu</button>
+          <button className="bg-red-500 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-red-600" onClick={endCall}>Kata Simu</button>
         </div>
       )}
 
-      {/* Sidebar: Users List */}
-      <div className="glass-panel" style={{ width: '300px', display: 'flex', flexDirection: 'column', padding: '1.5rem', overflowY: 'auto' }}>
-        <h2 className="title-gradient" style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>Marafiki (Contacts)</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {users.map(u => (
+      {/* --- SIDEBAR (Left Panel) --- */}
+      {/* On mobile, show sidebar only if showChatArea is false. On desktop, always show */}
+      <div className={`${showChatArea ? 'hidden md:flex' : 'flex'} flex-col w-full md:w-[350px] lg:w-[400px] bg-white border-r border-gray-200 h-full`}>
+        
+        {/* Sidebar Header */}
+        <div className="h-[60px] bg-[#f0f2f5] flex items-center justify-between px-4 py-2 border-b border-gray-200 flex-shrink-0">
+          <div className="flex items-center gap-3">
+             <div 
+                className="w-10 h-10 rounded-full bg-gray-300" 
+                style={{ background: session.user?.image ? `url(${session.user.image}) center/cover` : '#cbd5e1' }} 
+             />
+             <span className="font-semibold text-gray-800 hidden md:block">{session.user?.name}</span>
+          </div>
+          <div className="flex items-center gap-4 text-gray-500">
+            <Link href="/dashboard" title="Settings (Dashibodi)">
+               <Settings className="w-5 h-5 cursor-pointer hover:text-gray-700" />
+            </Link>
+            <MessageSquare className="w-5 h-5 cursor-pointer hover:text-gray-700" />
+            <MoreVertical className="w-5 h-5 cursor-pointer hover:text-gray-700" />
+          </div>
+        </div>
+
+        {/* Search Bar */}
+        <div className="bg-white p-2 border-b border-gray-200 flex-shrink-0">
+          <div className="bg-[#f0f2f5] rounded-lg flex items-center px-4 py-1.5">
+            <Search className="w-4 h-4 text-gray-500 mr-3" />
+            <input 
+              type="text" 
+              placeholder="Search or start new chat" 
+              className="bg-transparent border-none outline-none text-sm text-gray-700 w-full"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* Contact List */}
+        <div className="flex-1 overflow-y-auto bg-white">
+          {filteredUsers.map(u => (
             <div 
               key={u._id} 
               onClick={() => handleSelectUser(u)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '1rem', padding: '10px',
-                borderRadius: '10px', cursor: 'pointer',
-                background: selectedUser?._id === u._id ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
-                border: '1px solid var(--glass-border)',
-                transition: 'all 0.3s ease'
-              }}
+              className={`flex items-center px-4 py-3 cursor-pointer hover:bg-[#f5f6f6] transition-colors border-b border-gray-100 ${selectedUser?._id === u._id ? 'bg-[#f0f2f5]' : ''}`}
             >
-              <div style={{ 
-                width: '40px', height: '40px', borderRadius: '50%', 
-                background: u.profilePicture ? `url(${u.profilePicture}) center/cover` : 'var(--secondary-color)'
-              }} />
-              <div>
-                <h4 style={{ fontWeight: 600 }}>{u.username}</h4>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{u.status || 'Available'}</p>
+              <div 
+                className="w-12 h-12 rounded-full mr-4 flex-shrink-0 bg-gray-300"
+                style={{ background: u.profilePicture ? `url(${u.profilePicture}) center/cover` : '#cbd5e1' }} 
+              />
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-center mb-1">
+                  <h2 className="text-gray-900 font-normal text-[17px] truncate">{u.username}</h2>
+                  <span className="text-xs text-gray-500">
+                    {u.status === 'online' ? 'Sasa hivi' : ''}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-500 truncate">{u.phoneNumber}</p>
               </div>
             </div>
           ))}
+          {filteredUsers.length === 0 && (
+            <div className="text-center p-8 text-gray-400">Hakuna rafiki aliyepatikana</div>
+          )}
         </div>
-        <Link href="/dashboard" style={{ marginTop: 'auto', paddingTop: '1rem' }}>
-          <button className="btn-secondary" style={{ width: '100%' }}>Rudi Dashibodi</button>
-        </Link>
       </div>
 
-      {/* Main Chat Area */}
-      <div className="glass-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '0', overflow: 'hidden' }}>
+      {/* --- MAIN CHAT AREA (Right Panel) --- */}
+      {/* On mobile, show chat area only if showChatArea is true. On desktop, always show */}
+      <div className={`${!showChatArea ? 'hidden md:flex' : 'flex'} flex-col flex-1 bg-[#efeae2] h-full relative`}>
+        
+        {/* WhatsApp Background Pattern */}
+        <div className="absolute inset-0 opacity-40 pointer-events-none" style={{ backgroundImage: "url('https://web.whatsapp.com/img/bg-chat-tile-dark_a4be512e7195b6b733d9110b408f075d.png')", backgroundSize: '400px' }}></div>
+
         {selectedUser ? (
           <>
-            <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(0,0,0,0.2)' }}>
-              <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: selectedUser.profilePicture ? `url(${selectedUser.profilePicture}) center/cover` : 'var(--secondary-color)' }} />
-              <div>
-                <h3 style={{ fontSize: '1.3rem', fontWeight: 600 }}>{selectedUser.username}</h3>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{selectedUser.phoneNumber}</p>
+            {/* Chat Header */}
+            <div className="h-[60px] bg-[#f0f2f5] flex items-center justify-between px-4 py-2 border-b border-gray-200 z-10">
+              <div className="flex items-center gap-3 cursor-pointer">
+                <ArrowLeft className="w-6 h-6 text-gray-600 md:hidden mr-2" onClick={handleBackToList} />
+                <div 
+                  className="w-10 h-10 rounded-full bg-gray-300"
+                  style={{ background: selectedUser.profilePicture ? `url(${selectedUser.profilePicture}) center/cover` : '#cbd5e1' }}
+                />
+                <div>
+                  <h2 className="text-gray-900 font-medium text-[16px]">{selectedUser.username}</h2>
+                  <p className="text-xs text-gray-500">Mawasiliano yapo wazi</p>
+                </div>
               </div>
-              <div style={{ marginLeft: 'auto', display: 'flex', gap: '1rem' }}>
-                <button className="btn-secondary" onClick={() => callUser(selectedUser._id, false)} style={{ padding: '8px 16px', fontSize: '0.9rem', color: '#60a5fa', borderColor: 'rgba(96,165,250,0.3)' }}>📞 Piga Sauti</button>
-                <button className="btn-secondary" onClick={() => callUser(selectedUser._id, true)} style={{ padding: '8px 16px', fontSize: '0.9rem', color: '#f472b6', borderColor: 'rgba(244,114,182,0.3)' }}>📹 Video</button>
+              <div className="flex items-center gap-5 text-gray-500">
+                <Video className="w-5 h-5 cursor-pointer hover:text-gray-700" onClick={() => callUser(selectedUser._id, true)} title="Video Call" />
+                <Phone className="w-5 h-5 cursor-pointer hover:text-gray-700" onClick={() => callUser(selectedUser._id, false)} title="Voice Call" />
+                <Search className="w-5 h-5 cursor-pointer hover:text-gray-700 hidden sm:block" />
+                <MoreVertical className="w-5 h-5 cursor-pointer hover:text-gray-700" />
               </div>
             </div>
 
-            <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 flex flex-col gap-2 z-10 scrollbar-hide">
+              <div className="text-center my-4">
+                <span className="bg-[#ffeecd] text-gray-600 text-xs px-3 py-1 rounded-lg shadow-sm">
+                  Ujumbe na simu zinalindwa kwa usalama (End-to-end encrypted).
+                </span>
+              </div>
+              
               {messages.map(msg => {
                 const isMine = msg.senderId === (session.user as any).id;
                 return (
-                  <div key={msg._id} style={{ alignSelf: isMine ? 'flex-end' : 'flex-start', maxWidth: '70%' }}>
-                    <div style={{ 
-                      padding: '12px 18px', 
-                      borderRadius: '16px',
-                      background: isMine ? 'linear-gradient(135deg, var(--primary-color), var(--secondary-color))' : 'rgba(255,255,255,0.1)',
-                      color: 'white',
-                      borderBottomRightRadius: isMine ? '4px' : '16px',
-                      borderBottomLeftRadius: !isMine ? '4px' : '16px',
-                      boxShadow: isMine ? '0 4px 15px var(--primary-glow)' : 'none'
-                    }}>
-                      {msg.content}
-                    </div>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '4px', textAlign: isMine ? 'right' : 'left' }}>
-                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  <div key={msg._id} className={`flex ${isMine ? 'justify-end' : 'justify-start'} mb-1`}>
+                    <div 
+                      className={`relative max-w-[85%] md:max-w-[65%] px-3 py-2 rounded-lg shadow-sm ${isMine ? 'bg-[#d9fdd3]' : 'bg-white'}`}
+                      style={{ borderTopRightRadius: isMine ? 0 : '0.5rem', borderTopLeftRadius: !isMine ? 0 : '0.5rem' }}
+                    >
+                      <span className="text-[#111b21] text-[15px] leading-relaxed break-words block pr-12 pb-1">
+                        {msg.content}
+                      </span>
+                      <span className="text-[10px] text-gray-500 absolute bottom-1 right-2">
+                        {formatTime(msg.createdAt)}
+                        {isMine && <span className="ml-1 text-blue-500">✓✓</span>}
+                      </span>
                     </div>
                   </div>
                 );
@@ -362,28 +434,45 @@ export default function ChatPage() {
               <div ref={messagesEndRef} />
             </div>
 
-            <div style={{ padding: '1.5rem', borderTop: '1px solid var(--glass-border)', display: 'flex', gap: '1rem', background: 'rgba(0,0,0,0.2)' }}>
-              <input 
-                type="text" 
-                className="input-field" 
-                placeholder="Andika ujumbe wako hapa..." 
-                value={messageText}
-                onChange={e => setMessageText(e.target.value)}
-                onKeyPress={e => e.key === 'Enter' && handleSendMessage()}
-                style={{ flex: 1 }}
-              />
-              <button className="btn-primary" onClick={handleSendMessage} style={{ padding: '0 30px' }}>Tuma</button>
+            {/* Chat Input Area */}
+            <div className="bg-[#f0f2f5] px-4 py-3 flex items-center gap-3 z-10">
+              <Smile className="w-6 h-6 text-gray-500 cursor-pointer hidden sm:block" />
+              <Paperclip className="w-6 h-6 text-gray-500 cursor-pointer hidden sm:block" />
+              
+              <div className="flex-1 bg-white rounded-lg flex items-center px-4 py-2 shadow-sm">
+                <input 
+                  type="text" 
+                  className="bg-transparent border-none outline-none text-[15px] text-gray-800 w-full"
+                  placeholder="Type a message"
+                  value={messageText}
+                  onChange={e => setMessageText(e.target.value)}
+                  onKeyPress={e => e.key === 'Enter' && handleSendMessage()}
+                />
+              </div>
+
+              {messageText.trim() ? (
+                <button onClick={handleSendMessage} className="text-gray-500 hover:text-green-600 transition">
+                  <Send className="w-6 h-6" />
+                </button>
+              ) : (
+                <Mic className="w-6 h-6 text-gray-500 cursor-pointer" />
+              )}
             </div>
           </>
         ) : (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', color: 'var(--text-secondary)' }}>
-            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '1rem', opacity: 0.5 }}>
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-            </svg>
-            <p style={{ fontSize: '1.2rem' }}>Chagua rafiki pembeni ili kuanza mawasiliano (Chat)</p>
+          <div className="flex-1 flex flex-col items-center justify-center z-10 border-b-8 border-green-500">
+            <img src="/window.svg" alt="WhatsApp Web" className="w-72 opacity-20 mb-8" style={{ filter: 'grayscale(1)' }} />
+            <h1 className="text-3xl text-gray-700 font-light mb-4">CHART BOX Web</h1>
+            <p className="text-gray-500 text-sm max-w-md text-center leading-relaxed">
+              Tuma na upokee meseji bila kuunganisha simu yako kwenye intaneti.<br/>
+              Tumia Chartbox kupiga simu za video na sauti papo hapo.
+            </p>
+            <p className="text-gray-400 text-xs mt-8 flex items-center gap-1">
+              <span className="mr-1">🔒</span> Kila kitu kinalindwa salama.
+            </p>
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 }
