@@ -652,15 +652,17 @@ export default function ChatPage() {
               </div>
 
               {messageText.trim() ? (
-                <button onClick={handleSendMessage} className="text-gray-500 hover:text-green-600 transition">
-                  <Send className="w-6 h-6" />
+                <button onClick={handleSendMessage} className="bg-[#00a884] text-white rounded-full w-[50px] h-[50px] flex items-center justify-center hover:bg-[#008f6f] transition shadow-md flex-shrink-0">
+                  <Send className="w-5 h-5 ml-1" />
                 </button>
               ) : isRecording ? (
-                <button onClick={stopRecording} className="bg-red-500 text-white rounded-full p-2.5 hover:bg-red-600 transition shadow-lg">
-                  <Send className="w-5 h-5" />
+                <button onClick={stopRecording} className="bg-red-500 text-white rounded-full w-[50px] h-[50px] flex items-center justify-center hover:bg-red-600 transition shadow-md flex-shrink-0 animate-pulse">
+                  <Send className="w-5 h-5 ml-1" />
                 </button>
               ) : (
-                <Mic className="w-6 h-6 text-gray-500 cursor-pointer hover:text-green-600" onClick={startRecording} />
+                <button onClick={startRecording} className="bg-[#00a884] text-white rounded-full w-[50px] h-[50px] flex items-center justify-center hover:bg-[#008f6f] transition shadow-md flex-shrink-0">
+                  <Mic className="w-6 h-6" />
+                </button>
               )}
             </div>
           </>
